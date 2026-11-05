@@ -1,4 +1,4 @@
-# Fabric Notebook: nb_04_gold
+# Fabric Notebook: 05_gold_processing.py
 # Builds reporting tables/views from the CURRENT rows of silver.
 # Created as Delta tables so the Lakehouse SQL endpoint / Power BI can read them.
 
