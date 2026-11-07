@@ -1,4 +1,4 @@
-# Fabric Notebook: 04_silver_scd2.py
+# Fabric Notebook: notebooks/nb_03_silver_scd2.py
 # Flatten + dedupe bronze -> silver.<resource> with SCD Type 2 via Delta MERGE.
 
 # %% PARAMETERS
