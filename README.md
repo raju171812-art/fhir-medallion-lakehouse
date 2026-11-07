@@ -16,12 +16,12 @@ flowchart LR
         BRONZE["BRONZE (Delta)<br/>bronze.patient / encounter /<br/>observation / condition<br/>full nested resource + metadata"]
         SILVER["SILVER (Delta)<br/>flattened, cleaned, deduplicated<br/>SCD Type 2 history"]
         GOLD["GOLD (Delta + views)<br/>dim_patient, dim_date,<br/>fact_encounter, fact_observation,<br/>fact_condition"]
-        META[("META<br/>config_resources<br/>watermark<br/>pipeline_log")]
+        META[("META<br/>config_resources<br/>resource_watermark<br/>pipeline_log")]
     end
     RAW --> BRONZE --> SILVER --> GOLD
     META -. drives and logs .-> RAW
     META -. logs .-> BRONZE
-    GOLD --> PBI[Power BI report - optional]
+    GOLD --> PBI[Power BI report<br/>FHIR Healthcare Analytics Dashboard]
 ```
 
 | Layer | Location | Format | Purpose |
@@ -97,7 +97,7 @@ notebooks/
   nb_03_silver_scd2.py    Bronze -> Silver (flatten, dedupe, SCD2)
   nb_04_gold.py           Silver -> Gold tables and views
 pipelines/
-  pl_fhir_master.json     Fabric Data Pipeline export
+  PL_FHIR_Medallion_Pipeline.json   Fabric Data Pipeline export
 docs/
   screenshots/            pipeline run, sample queries
 README.md
@@ -111,7 +111,7 @@ README.md
 
 **Tracked per API call** in `meta.pipeline_log`: `run_id`, `resource_name`, `layer`, `page_no`, `api_url`, `api_call_time` (when the API was called), `http_status`, `rows_fetched`, `raw_file_path`, `data_saved_time` (when data was saved), `status`, `error_message`.
 
-**Incremental loads:** each run requests `_lastUpdated=ge{from_date}&_lastUpdated=lt{to_date}` and follows the Bundle's `next` link until there are no more pages. `meta.watermark` stores the last successfully loaded `to_date` per resource.
+**Incremental loads:** each run requests `_lastUpdated=ge{load_date}&_lastUpdated=lt{load_date + 1 day}` and follows the Bundle's `next` link until there are no more pages. `meta.resource_watermark` stores the last successfully loaded date per resource.
 
 **Bronze metadata columns:** `extraction_timestamp`, `api_url_or_params` (taken from the Bundle's `self` link), plus `source_file`, `ingest_date`, `run_id`.
 
@@ -147,14 +147,14 @@ SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY effective_from;
 
 1. Run `nb_00_setup_meta` once.
 2. For each day to load (use 2-3 days, e.g. `2026-11-02`, `2026-11-03`, `2026-11-04`), run in this order for **Patient → Encounter → Observation → Condition**:
-   - `nb_01_ingest_raw` with `resource_name`, `from_date`, `to_date`
-   - `nb_02_bronze` with `resource_name`, `ingest_date` (= `from_date`)
-   - `nb_03_silver_scd2` with `resource_name`, `ingest_date`
+   - `nb_01_ingest_raw` with `resource_name`, `load_date`
+   - `nb_02_bronze` with `resource_name`, `load_date`
+   - `nb_03_silver_scd2` with `resource_name`, `load_date`
 3. Run `nb_04_gold` once at the end.
 
 ### Orchestration
 
-`pl_fhir_master` (Fabric Data Pipeline) takes `from_date` and `to_date`, reads `meta.config_resources` ordered by `order_id`, and runs a sequential ForEach over the resources. Each iteration runs Raw ingest → Bronze → Silver. `nb_04_gold` runs after the loop. Each step is chained on success, so a failure stops the run and is recorded in `meta.pipeline_log`.
+`PL_FHIR_Medallion_Pipeline` (Fabric Data Pipeline) runs `ACT_Setup_Meta`, then a Lookup (`Reading_Config_Resources`) reads `meta.config_resources` ordered by `order_id`, and runs a **sequential** ForEach (Patient → Encounter → Observation → Condition; sequential also avoids exhausting trial Spark capacity). Each iteration runs Raw ingest → Bronze → Silver SCD2 → Gold, passing `resource_name`, `load_date` and `run_id` as base parameters. Each step is chained on success, so a failure stops the run and is recorded in `meta.pipeline_log`.
 
 ### Demonstrating SCD2
 
@@ -166,7 +166,7 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 | Object | Type | Description |
 |---|---|---|
-| `gold.dim_patient` | table | Current patient attributes |
+| `gold.dim_patient` | table | Current patient attributes (`valid_from`, `gold_loaded_at`) |
 | `gold.dim_date` | table | Calendar built from encounter dates |
 | `gold.fact_encounter` | table | One row per encounter |
 | `gold.fact_observation` | table | One row per observation |
@@ -193,7 +193,22 @@ _Add screenshots to `docs/screenshots/` and link them here:_
 - SCD2 history for one record
 - Gold view output
 
-## 10. Optional extensions
+## 10. Power BI report
+
+One page, **FHIR Healthcare Analytics Dashboard**, built on the Gold layer:
+
+- 4 KPI cards: Total Patients, Total Encounters, Total Observations, Total Conditions
+- 6 charts: Patients by Gender, Patients by State, Encounters Over Time, Observations by Type, Conditions by Type, Encounters by Status
+
+Screenshot: `docs/screenshots/powerbi_dashboard.png`
+
+## 11. Known limitations
+
+- Many HAPI test patients have no `state` or `gender`, so these show as (Blank) in the report.
+- Some Observation display names are non-English in the public test data.
+- The public HAPI server is shared and slow; Fabric trial capacity can throttle Spark sessions, so run resources sequentially.
+
+## 12. Optional extensions
 
 - [ ] XML version: set `fmt = "xml"` in `nb_01_ingest_raw` (Bronze would need an XML parser step)
-- [ ] 1-page Power BI report on the Gold layer
+- [x] 1-page Power BI report on the Gold layer (see section 10)
