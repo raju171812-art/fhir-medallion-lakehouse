@@ -1,4 +1,4 @@
-# Fabric Notebook: 03_bronze_processing.py
+# Fabric Notebook: notebooks/nb_02_bronze.py
 # Reads raw JSON pages for one resource + date and appends to bronze.<resource>.
 # Keeps the full nested FHIR resource (no flattening) + metadata columns.
 
