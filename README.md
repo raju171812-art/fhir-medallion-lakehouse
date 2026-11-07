@@ -16,7 +16,7 @@ flowchart LR
         BRONZE["BRONZE (Delta)<br/>bronze.patient / encounter /<br/>observation / condition<br/>full nested resource + metadata"]
         SILVER["SILVER (Delta)<br/>flattened, cleaned, deduplicated<br/>SCD Type 2 history"]
         GOLD["GOLD (Delta + views)<br/>dim_patient, dim_date,<br/>fact_encounter, fact_observation,<br/>fact_condition"]
-        META[("META<br/>config_resources<br/>watermark<br/>pipeline_log")]
+        META[("META<br/>config_resources<br/>resource_watermark<br/>pipeline_log")]
     end
     RAW --> BRONZE --> SILVER --> GOLD
     META -. drives and logs .-> RAW
@@ -28,9 +28,9 @@ flowchart LR
 |---|---|---|---|
 | Raw | `Files/raw/<Resource>/ingest_date=YYYY-MM-DD/` | JSON (or XML), unchanged | Exact copy of each API page, bucketed by date |
 | Bronze | `bronze.<resource>` | Delta | Full nested resource + `extraction_timestamp`, `api_url_or_params`, `source_file`, `ingest_date`, `run_id` |
-| Silver | `silver.<resource>` | Delta | Flattened columns, deduplicated, SCD2 (`effective_from`, `effective_to`, `is_current`, `hash_diff`) |
+| Silver | `silver.<resource>` | Delta | Flattened columns, deduplicated, SCD2 (`valid_from`, `effective_to`, `is_current`, `hash_diff`) |
 | Gold | `gold.*` | Delta tables + SQL views | Dimensional model for reporting |
-| Meta | `meta.*` | Delta | Config, watermark, pipeline log |
+| Meta | `meta.*` | Delta | Config, resource_watermark, pipeline log |
 
 ---
 
@@ -108,7 +108,7 @@ README.md
 
 **Tracked per API call** in `meta.pipeline_log`: `run_id`, `resource_name`, `layer`, `page_no`, `api_url`, `api_call_time` (when the API was called), `http_status`, `rows_fetched`, `raw_file_path`, `data_saved_time` (when data was saved), `status`, `error_message`.
 
-**Incremental loads:** each run requests `_lastUpdated=ge{load_date}&_lastUpdated=lt{load_date + 1 day}` and follows the Bundle's `next` link until there are no more pages. `meta.watermark` stores the last successfully loaded date per resource.
+**Incremental loads:** each run requests `_lastUpdated=ge{load_date}&_lastUpdated=lt{load_date + 1 day}` and follows the Bundle's `next` link until there are no more pages. `meta.resource_watermark` stores the last successfully loaded date per resource.
 
 **Bronze metadata columns:** `extraction_timestamp`, `api_url_or_params` (taken from the Bundle's `self` link), plus `source_file`, `ingest_date`, `run_id`.
 
@@ -124,7 +124,7 @@ For each resource, on every daily load:
 
 | Case | Action |
 |---|---|
-| `id` not in Silver | Insert with `is_current = true`, `effective_from = now`, `effective_to = NULL` |
+| `id` not in Silver | Insert with `is_current = true`, `valid_from = now`, `effective_to = NULL` |
 | `id` exists, `hash_diff` differs | Close old row (`is_current = false`, `effective_to = now`), insert new version |
 | `id` exists, `hash_diff` same | No change |
 
@@ -133,7 +133,7 @@ This is done with a single Delta `MERGE`. Changed rows are staged twice, once wi
 To see history for a record:
 
 ```sql
-SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY effective_from;
+SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY valid_from;
 ```
 
 ---
@@ -163,7 +163,7 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 | Object | Type | Description |
 |---|---|---|
-| `gold.dim_patient` | table | Current patient attributes (`effective_from`, `gold_loaded_at`) |
+| `gold.dim_patient` | table | Current patient attributes (`valid_from`, `gold_loaded_at`) |
 | `gold.dim_date` | table | Calendar built from encounter dates |
 | `gold.fact_encounter` | table | One row per encounter |
 | `gold.fact_observation` | table | One row per observation |
