@@ -163,7 +163,7 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 | Object | Type | Description |
 |---|---|---|
-| `gold.dim_patient` | table | Current patient attributes (`valid_from`, `gold_loaded_at`) |
+| `gold.dim_patient` | table | Current patient attributes (`effective_from`, `gold_loaded_at`) |
 | `gold.dim_date` | table | Calendar built from encounter dates |
 | `gold.fact_encounter` | table | One row per encounter |
 | `gold.fact_observation` | table | One row per observation |
