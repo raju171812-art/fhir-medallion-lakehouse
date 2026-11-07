@@ -1,4 +1,4 @@
-# Fabric Notebook: notebooks/01_setup/nb_00_setup_meta.py
+# Fabric Notebook: notebooks/nb_00_setup_meta.py
 # Run ONCE. Creates schemas, metadata tables and seeds the resource config.
 # Attach the default Lakehouse (lh_fhir). Use a schema-enabled Lakehouse;
 # if yours is not schema-enabled, replace "layer.table" names with "layer_table".
