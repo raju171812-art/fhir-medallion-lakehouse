@@ -1,0 +1,272 @@
+{
+    "name": "PL_FHIR_Medallion_Pipeline",
+    "objectId": "0bce3ef8-5e20-4136-9b21-4fed9963f9e8",
+    "properties": {
+        "activities": [
+            {
+                "name": "ACT_Setup_Meta",
+                "type": "TridentNotebook",
+                "state": "Inactive",
+                "onInactiveMarkAs": "Succeeded",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "c897063a-38df-4aa3-b6bf-5b19881070d1",
+                    "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                    "parameters": {
+                        "reset_all": {
+                            "value": false,
+                            "type": "bool"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Reading_Config_Resources",
+                "type": "Lookup",
+                "dependsOn": [
+                    {
+                        "activity": "ACT_Setup_Meta",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "LakehouseTableSource"
+                    },
+                    "firstRowOnly": false,
+                    "datasetSettings": {
+                        "annotations": [],
+                        "linkedService": {
+                            "name": "FHIR_Lakehouse",
+                            "properties": {
+                                "annotations": [],
+                                "type": "Lakehouse",
+                                "typeProperties": {
+                                    "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                                    "artifactId": "f3bb27ac-d8b3-4804-b0e8-e4567ce0e65c",
+                                    "rootFolder": "Tables"
+                                }
+                            }
+                        },
+                        "type": "LakehouseTable",
+                        "schema": [],
+                        "typeProperties": {
+                            "schema": "meta",
+                            "table": "config_resources"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Reading_Config_Resources",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Reading_Config_Resources').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": true,
+                    "activities": [
+                        {
+                            "name": "ACT_Raw_Ingest",
+                            "type": "TridentNotebook",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "notebookId": "6f679e5d-ccdc-4238-9a16-616b7c360114",
+                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                                "parameters": {
+                                    "resource_name": {
+                                        "value": {
+                                            "value": "@item().resource_name",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "load_date": {
+                                        "value": {
+                                            "value": "@pipeline().parameters.load_date",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "run_id": {
+                                        "value": {
+                                            "value": "@pipeline().RunId",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "max_pages": {
+                                        "value": {
+                                            "value": "@pipeline().parameters.page",
+                                            "type": "Expression"
+                                        },
+                                        "type": "int"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "ACT_Bronze_Load",
+                            "type": "TridentNotebook",
+                            "dependsOn": [
+                                {
+                                    "activity": "ACT_Raw_Ingest",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "notebookId": "c0c6b99e-ad5b-495d-946e-defcdabde1c2",
+                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                                "parameters": {
+                                    "resource_name": {
+                                        "value": {
+                                            "value": "@item().resource_name",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "load_date": {
+                                        "value": {
+                                            "value": "@pipeline().parameters.load_date",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "run_id": {
+                                        "value": {
+                                            "value": "@pipeline().RunId",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "ACT_Silver_SCD2",
+                            "type": "TridentNotebook",
+                            "dependsOn": [
+                                {
+                                    "activity": "ACT_Bronze_Load",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "notebookId": "cb78391f-23d2-4b09-b2a0-56559f3bb88d",
+                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                                "parameters": {
+                                    "resource_name": {
+                                        "value": {
+                                            "value": "@item().resource_name",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "load_date": {
+                                        "value": {
+                                            "value": "@item().load_date",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    },
+                                    "run_id": {
+                                        "value": {
+                                            "value": "@pipeline().RunId",
+                                            "type": "Expression"
+                                        },
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "name": "ACT_Gold_Model",
+                            "type": "TridentNotebook",
+                            "dependsOn": [
+                                {
+                                    "activity": "ACT_Silver_SCD2",
+                                    "dependencyConditions": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            ],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "notebookId": "8322f0fc-6804-4eeb-84b8-81c90b0e56a5",
+                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5"
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "load_date": {
+                "type": "string",
+                "defaultValue": "2026-11-02"
+            },
+            "page": {
+                "type": "int",
+                "defaultValue": 2000
+            }
+        },
+        "lastModifiedByObjectId": "62e041fb-01c0-446f-88aa-97c1d981b0a7",
+        "lastPublishTime": "2026-11-07T15:18:55Z"
+    }
+}
