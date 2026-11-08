@@ -205,10 +205,6 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 ![Fabric Screenshot 8](docs/screenshots/Screenshot%202026-11-08%20120513.png)
 
-- Pipeline run (all activities succeeded)
-- `meta.pipeline_log` sample
-- SCD2 history for one record
-- Gold view output
 
 ## 10. Power BI report
 
