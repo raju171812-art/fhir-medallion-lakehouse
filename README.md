@@ -11,7 +11,7 @@ Incremental ingestion of the public HAPI FHIR R4 API (`https://hapi.fhir.org/bas
 ```mermaid
 flowchart LR
     API[HAPI FHIR R4 API<br/>paginated Bundles] --> RAW
-    subgraph Lakehouse lh_fhir
+    subgraph Lakehouse FHIR_Lakehouse
         RAW["RAW (Files)<br/>raw/&lt;Resource&gt;/ingest_date=YYYY-MM-DD/page_NNNN.json<br/>responses stored as-is"]
         BRONZE["BRONZE (Delta)<br/>bronze.patient / encounter /<br/>observation / condition<br/>full nested resource + metadata"]
         SILVER["SILVER (Delta)<br/>flattened, cleaned, deduplicated<br/>SCD Type 2 history"]
@@ -140,7 +140,7 @@ SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY valid_from;
 
 ## 6. How to run
 
-**Prerequisites:** Microsoft Fabric workspace (trial) with a schema-enabled Lakehouse named `lh_fhir`, set as the default Lakehouse in every notebook.
+**Prerequisites:** Microsoft Fabric workspace (trial) with a schema-enabled Lakehouse named `FHIR_Lakehouse`, set as the default Lakehouse in every notebook.
 
 1. Run `nb_00_setup_meta` once.
 2. For each day to load (use 2-3 days, e.g. `2026-11-02`, `2026-11-03`, `2026-11-04`), run in this order for **Patient → Encounter → Observation → Condition**:
