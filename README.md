@@ -222,6 +222,12 @@ Metadata: `meta.pipeline_log` (when each API was called and saved)
 
 ![meta.pipeline_log](docs/screenshots/Screenshot%202026-11-08%20120513.png)
 
+Successful pipeline run: all four resources processed with Raw, Bronze and Silver for each
+
+![Successful pipeline run](docs/screenshots/pipeline_run_success.png)
+
+Run result for load_date 2026-11-04 (one shared run_id): Patient 186, Encounter 127, Observation 2,539 and Condition 128 rows.
+
 
 ## 10. Power BI report
 
