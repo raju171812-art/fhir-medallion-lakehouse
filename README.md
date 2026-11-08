@@ -108,7 +108,7 @@ README.md
 
 **Tracked per API call** in `meta.pipeline_log`: `run_id`, `resource_name`, `layer`, `page_no`, `api_url`, `api_call_time` (when the API was called), `http_status`, `rows_fetched`, `raw_file_path`, `data_saved_time` (when data was saved), `status`, `error_message`.
 
-**Incremental loads:** each run requests `_lastUpdated=ge{load_date}&_lastUpdated=lt{load_date + 1 day}` and follows the Bundle's `next` link until there are no more pages. `meta.watermark` stores the last successfully loaded date per resource.
+**Incremental loads:** each run requests `_lastUpdated=ge{load_date}&_lastUpdated=lt{load_date + 1 day}` and follows the Bundle's `next` link until there are no more pages. `meta.resource_watermark` stores the last successfully loaded date per resource.
 
 **Bronze metadata columns:** `extraction_timestamp`, `api_url_or_params` (taken from the Bundle's `self` link), plus `source_file`, `ingest_date`, `run_id`.
 
@@ -144,14 +144,14 @@ SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY valid_from;
 
 1. Run `nb_00_setup_meta` once.
 2. For each day to load (use 2-3 days, e.g. `2026-11-02`, `2026-11-03`, `2026-11-04`), run in this order for **Patient → Encounter → Observation → Condition**:
-   - `nb_01_ingest_raw` with `resource_name`, `from_date`, `to_date`, `run_id`
-   - `nb_02_bronze` with `resource_name`, `ingest_date`, `run_id`
-   - `nb_03_silver_scd2` with `resource_name`, `ingest_date`
+   - `nb_01_ingest_raw` with `resource_name`, `load_date`, `run_id`, `max_pages`
+   - `nb_02_bronze` with `resource_name`, `load_date`, `run_id`
+   - `nb_03_silver_scd2` with `resource_name`, `load_date`, `run_id`
 3. Run `nb_04_gold` once at the end.
 
 ### Orchestration
 
-`PL_FHIR_Medallion_Pipeline` (Fabric Data Pipeline) runs `ACT_Setup_Meta`, then a Lookup (`Reading_Config_Resources`) reads `meta.config_resources` ordered by `order_id`, and runs a **sequential** ForEach (Patient → Encounter → Observation → Condition; sequential also avoids exhausting trial Spark capacity). Each iteration runs Raw ingest → Bronze → Silver SCD2 → Gold, passing `resource_name`, `load_date` and `run_id` as base parameters. Each step is chained on success, so a failure stops the run and is recorded in `meta.pipeline_log`.
+`PL_FHIR_Medallion_Pipeline` (Fabric Data Pipeline) runs `ACT_Setup_Meta` (a one-time setup notebook, deactivated after the first run and marked as succeeded), then a Lookup (`Reading_Config_Resources`) reads `meta.config_resources` ordered by `order_id`, and runs a **sequential** ForEach (Patient → Encounter → Observation → Condition; sequential also avoids exhausting trial Spark capacity). Each iteration runs Raw ingest → Bronze → Silver SCD2 → Gold, passing `resource_name`, `load_date` (pipeline parameter) and `run_id` (`@pipeline().RunId`) as base parameters; the pipeline parameter `page` is passed to the ingest notebook as `max_pages`. Each step is chained on success, so a failure stops the run and is recorded in `meta.pipeline_log`.
 
 ### Demonstrating SCD2
 
@@ -183,27 +183,41 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 ## 9. Screenshots
 
-### Fabric Implementation Screenshots
+### Gold layer tables (Lakehouse `FHIR_Lakehouse`)
 
-![Fabric Screenshot 1](docs/screenshots/Screenshot%202026-11-08%20115417.png)
+Gold: `dim_patient`
 
-![Fabric Screenshot 2](docs/screenshots/Screenshot%202026-11-08%20115519.png)
+![dim_patient](docs/screenshots/Screenshot%202026-11-08%20115417.png)
 
-![Fabric Screenshot 3](docs/screenshots/Screenshot%202026-11-08%20115611.png)
+Gold: `fact_encounter`
 
-![Fabric Screenshot 4](docs/screenshots/Screenshot%202026-11-08%20115723.png)
+![fact_encounter](docs/screenshots/Screenshot%202026-11-08%20115519.png)
 
-![Fabric Screenshot 5](docs/screenshots/Screenshot%202026-11-08%20115812.png)
+Gold: `fact_observation`
+
+![fact_observation](docs/screenshots/Screenshot%202026-11-08%20115611.png)
+
+Gold: `fact_condition`
+
+![fact_condition](docs/screenshots/Screenshot%202026-11-08%20115723.png)
+
+Gold: `dim_date`
+
+![dim_date](docs/screenshots/Screenshot%202026-11-08%20115812.png)
 
 ### Power BI Dashboard
 
 ![Power BI Dashboard](docs/screenshots/Screenshot%202026-11-08%20115852.png)
 
-### Additional Fabric Screenshots
+### Pipeline and metadata
 
-![Fabric Screenshot 7](docs/screenshots/Screenshot%202026-11-08%20120050.png)
+Pipeline canvas: `PL_FHIR_Medallion_Pipeline` and its parameters
 
-![Fabric Screenshot 8](docs/screenshots/Screenshot%202026-11-08%20120513.png)
+![Pipeline canvas](docs/screenshots/Screenshot%202026-11-08%20120050.png)
+
+Metadata: `meta.pipeline_log` (when each API was called and saved)
+
+![meta.pipeline_log](docs/screenshots/Screenshot%202026-11-08%20120513.png)
 
 
 ## 10. Power BI report
@@ -219,6 +233,7 @@ Screenshot: `docs/screenshots/Screenshot 2026-11-08 115852.png`
 
 - Many HAPI test patients have no `state` or `gender`, so these show as (Blank) in the report.
 - Some Observation display names are non-English in the public test data.
+- Data was loaded for these dates: _TODO: list the 2-3 load dates (the pipeline `load_date` default is 2026-11-02)_.
 - The public HAPI server is shared and slow; Fabric trial capacity can throttle Spark sessions, so run resources sequentially.
 
 ## 12. Optional extensions
