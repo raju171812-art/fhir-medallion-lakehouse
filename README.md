@@ -90,13 +90,16 @@ FHIR references look like `Patient/123`. The silver notebook strips the prefix s
 ## 3. Repository structure
 
 ```
-nb_00_setup_meta.py
-nb_01_ingest_raw.py
-nb_02_bronze.py
-nb_03_silver_scd2.py
-nb_04_gold.py
+notebooks/
+  nb_00_setup_meta.ipynb
+  nb_01_ingest_raw.ipynb
+  nb_02_bronze.ipynb
+  nb_03_silver_scd2.ipynb
+  nb_04_gold.ipynb
 pipelines/
   PL_FHIR_Medallion_Pipeline.json
+docs/
+  screenshots/
 README.md
 ```
 
