@@ -144,9 +144,9 @@ SELECT * FROM silver.patient WHERE id = '<id>' ORDER BY valid_from;
 
 1. Run `nb_00_setup_meta` once.
 2. For each day to load (use 2-3 days, e.g. `2026-11-02`, `2026-11-03`, `2026-11-04`), run in this order for **Patient → Encounter → Observation → Condition**:
-   - `nb_01_ingest_raw` with `resource_name`, `load_date`
-   - `nb_02_bronze` with `resource_name`, `load_date`
-   - `nb_03_silver_scd2` with `resource_name`, `load_date`
+   - `nb_01_ingest_raw` with `resource_name`, `from_date`, `to_date`, `run_id`
+   - `nb_02_bronze` with `resource_name`, `ingest_date`, `run_id`
+   - `nb_03_silver_scd2` with `resource_name`, `ingest_date`
 3. Run `nb_04_gold` once at the end.
 
 ### Orchestration
