@@ -103,7 +103,7 @@
                                 "secureInput": false
                             },
                             "typeProperties": {
-                                "notebookId": "6f679e5d-ccdc-4238-9a16-616b7c360114",
+                                "notebookId": "c7674a5b-cacd-45a0-90e8-983fdd5cc0e2",
                                 "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
                                 "parameters": {
                                     "resource_name": {
@@ -134,7 +134,8 @@
                                         },
                                         "type": "int"
                                     }
-                                }
+                                },
+                                "sessionTag": "fhir_session"
                             }
                         },
                         {
@@ -156,7 +157,7 @@
                                 "secureInput": false
                             },
                             "typeProperties": {
-                                "notebookId": "c0c6b99e-ad5b-495d-946e-defcdabde1c2",
+                                "notebookId": "74f4c10d-5947-4ca4-a539-944f65adf0a7",
                                 "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
                                 "parameters": {
                                     "resource_name": {
@@ -180,7 +181,8 @@
                                         },
                                         "type": "string"
                                     }
-                                }
+                                },
+                                "sessionTag": "fhir_session"
                             }
                         },
                         {
@@ -202,7 +204,7 @@
                                 "secureInput": false
                             },
                             "typeProperties": {
-                                "notebookId": "cb78391f-23d2-4b09-b2a0-56559f3bb88d",
+                                "notebookId": "d2594784-95c6-49c7-8786-d26b13706ab4",
                                 "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
                                 "parameters": {
                                     "resource_name": {
@@ -226,7 +228,8 @@
                                         },
                                         "type": "string"
                                     }
-                                }
+                                },
+                                "sessionTag": "fhir_session"
                             }
                         },
                         {
@@ -249,7 +252,8 @@
                             },
                             "typeProperties": {
                                 "notebookId": "8322f0fc-6804-4eeb-84b8-81c90b0e56a5",
-                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5"
+                                "workspaceId": "74b1addd-3980-42ef-ae0d-cd34d67dace5",
+                                "sessionTag": "fhir_session"
                             }
                         }
                     ]
@@ -259,7 +263,7 @@
         "parameters": {
             "load_date": {
                 "type": "string",
-                "defaultValue": "2026-11-02"
+                "defaultValue": "2026-11-04"
             },
             "page": {
                 "type": "int",
@@ -267,6 +271,6 @@
             }
         },
         "lastModifiedByObjectId": "62e041fb-01c0-446f-88aa-97c1d981b0a7",
-        "lastPublishTime": "2026-11-07T15:18:55Z"
+        "lastPublishTime": "2026-11-08T07:39:10Z"
     }
 }
