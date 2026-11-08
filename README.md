@@ -183,7 +183,29 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 ## 9. Screenshots
 
-_Add screenshots to `docs/screenshots/` and link them here:_
+_Add screenshots to docs/screenshots/ and link them here:_
+
+### Fabric Implementation Screenshots
+
+![Fabric Screenshot 1](docs/screenshots/Screenshot%202026-11-08%20115417.png)
+
+![Fabric Screenshot 2](docs/screenshots/Screenshot%202026-11-08%20115519.png)
+
+![Fabric Screenshot 3](docs/screenshots/Screenshot%202026-11-08%20115611.png)
+
+![Fabric Screenshot 4](docs/screenshots/Screenshot%202026-11-08%20115723.png)
+
+![Fabric Screenshot 5](docs/screenshots/Screenshot%202026-11-08%20115812.png)
+
+### Power BI Dashboard
+
+![Power BI Dashboard](docs/screenshots/Screenshot%202026-11-08%20115852.png)
+
+### Additional Fabric Screenshots
+
+![Fabric Screenshot 7](docs/screenshots/Screenshot%202026-11-08%20120050.png)
+
+![Fabric Screenshot 8](docs/screenshots/Screenshot%202026-11-08%20120513.png)
 
 - Pipeline run (all activities succeeded)
 - `meta.pipeline_log` sample
