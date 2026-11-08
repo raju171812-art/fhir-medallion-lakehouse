@@ -217,7 +217,7 @@ One page, **FHIR Healthcare Analytics Dashboard**, built on the Gold layer:
 - 4 KPI cards: Total Patients, Total Encounters, Total Observations, Total Conditions
 - 6 charts: Patients by Gender, Patients by State, Encounters Over Time, Observations by Type, Conditions by Type, Encounters by Status
 
-Screenshot: `docs/screenshots/powerbi_dashboard.png`
+Screenshot: `docs/screenshots/Screenshot 2026-11-08 115852.png`
 
 ## 11. Known limitations
 
