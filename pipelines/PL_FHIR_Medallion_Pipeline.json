@@ -214,7 +214,7 @@
                                     },
                                     "load_date": {
                                         "value": {
-                                            "value": "@item().load_date",
+                                            "value": "@pipeline().parameters.load_date",
                                             "type": "Expression"
                                         },
                                         "type": "string"
