@@ -12,7 +12,7 @@ Incremental ingestion of the public HAPI FHIR R4 API (`https://hapi.fhir.org/bas
 flowchart LR
     API[HAPI FHIR R4 API<br/>paginated Bundles] --> RAW
     subgraph Lakehouse FHIR_Lakehouse
-        RAW["RAW (Files)<br/>raw/&lt;Resource&gt;/ingest_date=YYYY-MM-DD/page_NNNN.json<br/>responses stored as-is"]
+        RAW["RAW (Files)<br/>raw/&lt;Resource&gt;/ingest_date=YYYY-MM-DD/run_id=&lt;run_id&gt;/page_NNNNN.json<br/>responses stored as-is"]
         BRONZE["BRONZE (Delta)<br/>bronze.patient / encounter /<br/>observation / condition<br/>full nested resource + metadata"]
         SILVER["SILVER (Delta)<br/>flattened, cleaned, deduplicated<br/>SCD Type 2 history"]
         GOLD["GOLD (Delta + views)<br/>dim_patient, dim_date,<br/>fact_encounter, fact_observation,<br/>fact_condition"]
@@ -26,7 +26,7 @@ flowchart LR
 
 | Layer | Location | Format | Purpose |
 |---|---|---|---|
-| Raw | `Files/raw/<Resource>/ingest_date=YYYY-MM-DD/` | JSON (or XML), unchanged | Exact copy of each API page, bucketed by date |
+| Raw | `Files/raw/<Resource>/ingest_date=YYYY-MM-DD/run_id=<run_id>/` | JSON (or XML), unchanged | Exact copy of each API page, bucketed by date and run |
 | Bronze | `bronze.<resource>` | Delta | Full nested resource + `extraction_timestamp`, `api_url_or_params`, `source_file`, `ingest_date`, `run_id` |
 | Silver | `silver.<resource>` | Delta | Flattened columns, deduplicated, SCD2 (`valid_from`, `effective_to`, `is_current`, `hash_diff`) |
 | Gold | `gold.*` | Delta tables + SQL views | Dimensional model for reporting |
@@ -235,7 +235,8 @@ Screenshot: `docs/screenshots/Screenshot 2026-11-08 115852.png`
 ## 11. Known limitations
 
 - Many HAPI test patients have no `state` or `gender`, so these show as (Blank) in the report.
-- Some Observation display names are non-English in the public test data.
+- Some Observation display names are non-English in the public test data.  
+- One Condition (462259) references Encounter 208313, which is not in the loaded data, so it has no matching encounter in Gold (orphan reference in     the public test data).
 - Data was loaded for 3 days: 2026-11-02, 2026-11-03 and 2026-11-04 (one pipeline run per `load_date`).
 - The public HAPI server is shared and slow; Fabric trial capacity can throttle Spark sessions, so run resources sequentially.
 
