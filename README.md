@@ -180,7 +180,7 @@ Re-run an overlapping date window, or load a day where an existing record was up
 ## 8. Design notes
 
 - **Public API:** HAPI is shared and can be slow, so ingestion uses retries with backoff, a short pause between pages and a `max_pages` safety cap.
-- **Idempotent Bronze:** re-running a date deletes that date's Bronze rows before appending.
+- **Idempotent Bronze:** a Raw run that is already fully loaded is skipped on re-run; a partially loaded run stops the notebook for investigation.
 - **Schema drift:** Bronze uses `mergeSchema`, and Silver treats fields missing from a day's data as NULL.
 - **Dataflow Gen2:** not used for JSON-to-table conversion. All parsing is done in Spark notebooks.
 
