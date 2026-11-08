@@ -233,7 +233,7 @@ Screenshot: `docs/screenshots/Screenshot 2026-11-08 115852.png`
 
 - Many HAPI test patients have no `state` or `gender`, so these show as (Blank) in the report.
 - Some Observation display names are non-English in the public test data.
-- Data was loaded for these dates: _TODO: list the 2-3 load dates (the pipeline `load_date` default is 2026-11-02)_.
+- Data was loaded for 3 days: 2026-11-02, 2026-11-03 and 2026-11-04 (one pipeline run per `load_date`).
 - The public HAPI server is shared and slow; Fabric trial capacity can throttle Spark sessions, so run resources sequentially.
 
 ## 12. Optional extensions
