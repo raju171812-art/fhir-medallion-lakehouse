@@ -183,8 +183,6 @@ Re-run an overlapping date window, or load a day where an existing record was up
 
 ## 9. Screenshots
 
-_Add screenshots to docs/screenshots/ and link them here:_
-
 ### Fabric Implementation Screenshots
 
 ![Fabric Screenshot 1](docs/screenshots/Screenshot%202026-11-08%20115417.png)
